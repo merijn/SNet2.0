@@ -53,7 +53,7 @@ Library
   Build-Tools:         c2hsc          >= 0.6.2
              ,         hsc2hs
 
-  Build-Depends:       base           >= 4.5
+  Build-Depends:       base           >= 4.5 && < 5.0
                ,       bindings-DSL   == 1.0.*
                ,       containers     >= 0.4.2
                ,       data-default   == 0.5.*
