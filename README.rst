@@ -33,6 +33,7 @@ Prerequisites
 -------------
 
 This program requires the following:
+
 - GHC 7.6 or later (uses GHC extensions not available in earlier versions)
 - c2hsc 0.6.2 or later (run ``cabal install c2hsc``)
 
@@ -46,7 +47,9 @@ c2hsc is installed in your ``PATH`` environment variable. Typically,
 c2hsc is installed in
 ``<HaskellBase>/ghc-<GHCVersion>/lib/c2hsc-<C2HSCVersion>/bin``.
 
-The run from this directory: ``cabal install``.
+Then run from the SNet' root directory::
+
+   cabal install
 
 Example program
 ---------------
