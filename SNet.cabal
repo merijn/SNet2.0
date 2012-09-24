@@ -1,5 +1,5 @@
 Name:                SNet
-Version:             0.0.0
+Version:             0.1.0
 
 Homepage:            http://www.snet-home.org/
 Bug-Reports:         https://github.com/merijn/SNet2.0/issues
@@ -38,7 +38,8 @@ Library
   Default-Language:    Haskell2010
   Ghc-Options:         -Wall -fno-warn-unused-do-bind
   Exposed-Modules:     SNet
-  Other-Modules:       SNet.Interfaces
+  Other-Modules:       SNet.Combinators
+                       SNet.Interfaces
                        SNet.Interfaces.C
                        SNet.Interfaces.CHandle
                        SNet.Network

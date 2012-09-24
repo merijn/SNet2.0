@@ -3,12 +3,19 @@ module SNet
   ( runSNet
   , module SNet.Interfaces
   , Variants (..)
+  , VariantMap (..)
   , Pattern (..)
   , RecEntry (..)
   , CInt (..)
   , syncro
   , box
+  , (-->)
+  , (!!)
+  , parallel
+  , (*)
   ) where
+
+import Prelude hiding ((!!), (*))
 
 import Control.Concurrent
 import Control.Exception
@@ -22,12 +29,13 @@ import System.IO.Error
 
 import SNet.Interfaces
 
-import SNet.Task
+import SNet.Combinators
+import SNet.Network
 import SNet.Pattern
-import SNet.Variants
 import SNet.Record
 import SNet.Stream
-import SNet.Network
+import SNet.Task
+import SNet.Variants
 
 globOut :: MonadIO m => MVar () -> m Stream
 globOut stop = task_ (liftIO . print) (liftIO $ putMVar stop ())

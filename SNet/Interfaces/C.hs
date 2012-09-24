@@ -58,7 +58,7 @@ newHandle variants snetOut = liftIO $ do
       , c'Handle'record  = nullPtr
       , c'Handle'snetOut = outFun
       }
-  where patLengths = mapVariants variants length
+  where patLengths = variantsToList variants length
 
 withHandle :: MonadIO m
            => (Ptr C'Handle -> Record Data -> IO ())
