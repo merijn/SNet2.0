@@ -65,7 +65,7 @@ delete (Field i) = recFields %~ IntMap.delete i
 
 merge :: Record Data -> Record Data -> Record Data
 merge (Rec t1 b1 f1) (Rec t2 b2 f2) =
-    Rec (union t1 t2) (union b1 b2) (union f1 f2)
+    Rec (t1 `union` t2) (b1 `union` b2) (f1 `union` f2)
 
 match :: Pattern p -> Record Data -> Maybe Int
 match pat rec = foldPattern pat counter (Just 0)

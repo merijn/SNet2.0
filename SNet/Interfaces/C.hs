@@ -52,7 +52,7 @@ newHandle variants snetOut = liftIO $ do
     outFun  <- mkOutFun $ outputRecord variants snetOut
     lengths <- newArray patLengths
     values  <- mallocArray $ fromIntegral (maximum patLengths)
-    new $ C'Handle
+    new C'Handle
       { c'Handle'lengths = lengths
       , c'Handle'values  = values
       , c'Handle'record  = nullPtr

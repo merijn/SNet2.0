@@ -41,11 +41,11 @@ globOut :: MonadIO m => MVar () -> m Stream
 globOut stop = task_ (liftIO . print) (liftIO $ putMVar stop ())
 
 globIn :: MVar () -> Stream -> IO ()
-globIn stop output = do
-    forever $
-      handle eof $ do
-        rec <- readLn :: IO (Record Data)
-        writeStream output rec
+globIn stop output =
+  forever $
+    handle eof $ do
+      rec <- readLn :: IO (Record Data)
+      writeStream output rec
   where eof e = if isEOFError e
                    then takeMVar stop
                    else ioError e
