@@ -43,10 +43,9 @@ import SNet.Task
 
 parallel :: VariantMap ps SNet -> SNet
 parallel branchList output = do
-    outputs <- mapM spawnNet branchList
+    outputs <- mapM ($ output) branchList
     task_ (\rec -> writeStream (getBestMatch outputs rec) rec)
           (void $ mapM closeStream outputs)
-  where spawnNet net = fst <$> spawnSNet net def output
 
 (*) :: SNet -> Pattern p -> SNet
 (*) net pattern output = do
