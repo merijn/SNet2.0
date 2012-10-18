@@ -53,7 +53,7 @@ Library
   Build-Tools:         c2hsc          >= 0.6.2
              ,         hsc2hs
 
-  Build-Depends:       base           >= 4.5 && < 5.0
+  Build-Depends:       base
                ,       bindings-DSL   == 1.0.*
                ,       containers     >= 0.4.2
                ,       data-default   == 0.5.*
@@ -65,6 +65,19 @@ Library
   Cc-Options:          -std=c99
   Include-Dirs:        SNet/Interfaces/
   Install-Includes:    SNet/Interfaces/CHandle.h
+
+Test-Suite smoke-test
+  Type:                exitcode-stdio-1.0
+  Default-Language:    Haskell2010
+  Ghc-Options:         -Wall -threaded
+
+  Main-Is:             SmokeTest.hs
+  Hs-Source-Dirs:      tests
+  Build-Depends:       base
+               ,       SNet
+
+  C-Sources:           tests/Cfuns.c
+  Cc-Options:          -std=c99
 
 Source-Repository head
   Type:     git
