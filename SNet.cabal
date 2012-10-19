@@ -66,14 +66,16 @@ Library
   Include-Dirs:        SNet/Interfaces/
   Install-Includes:    SNet/Interfaces/CHandle.h
 
-Test-Suite smoke-test
-  Type:                exitcode-stdio-1.0
+Test-Suite SNet
+  Type:                detailed-0.9
   Default-Language:    Haskell2010
   Ghc-Options:         -Wall -threaded
 
-  Main-Is:             SmokeTest.hs
+  Test-Module:         Test
   Hs-Source-Dirs:      tests
   Build-Depends:       base
+               ,       containers
+               ,       Cabal
                ,       SNet
 
   C-Sources:           tests/Cfuns.c

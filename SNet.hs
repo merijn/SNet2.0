@@ -50,23 +50,25 @@ import SNet.Variants
 type SNetIn a = MVar a -> Stream -> IO a
 type SNetOut a = MonadIO m => MVar a -> m Stream
 
-globIn :: SNetIn ()
+globIn :: SNetIn a
 globIn stop output = do
   openStream output
-  forever $
-    handle eof $ do
+  handle eof $
+    forever $ do
       rec <- readLn :: IO (Record Data)
       writeStream output rec
-  where eof e = if isEOFError e
-                   then do closeStream output
-                           takeMVar stop
-                   else ioError e
+  where eof e = do
+          closeStream output
+          val <- takeMVar stop
+          if isEOFError e
+             then return val
+             else ioError e
 
 globOut :: SNetOut ()
 globOut mvar = taskIO () (liftIO . print) (liftIO stop)
   where stop = putMVar mvar ()
 
-dummyIn :: [Record Data] -> SNetIn [Record Data]
+dummyIn :: [Record Data] -> SNetIn a
 dummyIn inputList stop output = do
     openStream output
     mapM_ (writeStream output) inputList

@@ -39,6 +39,19 @@ data WrappedRecord where
   WrapControl :: Record Control -> WrappedRecord
   WrapData :: Record Data -> WrappedRecord
 
+instance Eq (Record Data) where
+    Rec t b f == Rec t' b' f' = t == t' && b == b' && f == f'
+
+instance Ord (Record Data) where
+    compare (Rec t b f) (Rec t' b' f')
+      | t < t' = LT
+      | t > t' = GT
+      | b < b' = LT
+      | b > b' = GT
+      | f < f' = LT
+      | f > f' = GT
+      | otherwise = EQ
+
 instance Show (Record Data) where
     show (Rec t b _) = "Rec {(" ++ show t ++ ") (" ++ show b ++ ")}"
 
