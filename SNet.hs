@@ -31,8 +31,7 @@ import Prelude hiding ((!!), (*))
 import Control.Concurrent
 import Control.Exception
 import Control.Monad
-import Control.Monad.Trans
-import Control.Monad.Trans.State
+import Control.Monad.State
 
 import Data.Default
 import Foreign.C.Types
@@ -64,7 +63,8 @@ globIn stop output = do
                    else ioError e
 
 globOut :: SNetOut ()
-globOut stop = task_ (liftIO . print) (liftIO $ putMVar stop ())
+globOut mvar = taskIO () (liftIO . print) (liftIO stop)
+  where stop = putMVar mvar ()
 
 dummyIn :: [Record Data] -> SNetIn [Record Data]
 dummyIn inputList stop output = do
@@ -75,12 +75,13 @@ dummyIn inputList stop output = do
 
 dummyOut :: SNetOut [Record Data]
 dummyOut mvar = do
-  task [] (modify . (:)) (get >>= liftIO . putMVar mvar . reverse)
+    taskIO [] (modify . (:)) (get >>= stop)
+  where stop = liftIO . putMVar mvar . reverse
 
 runSNetCustom :: SNetIn a -> SNetOut a -> SNet -> IO a
 runSNetCustom snetin snetout net = do
     stopMVar <- newEmptyMVar
-    input <- evalStateT (snetout stopMVar >>= net) def
+    input <- snetout stopMVar >>= spawnSNet net def
     snetin stopMVar input
 
 runSNet :: SNet -> IO ()

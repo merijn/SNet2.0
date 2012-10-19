@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 module SNet.Combinators
   ( (-->)
   , (!!)
@@ -5,15 +7,13 @@ module SNet.Combinators
   , (*)
   ) where
 
-import Prelude hiding (lookup, (!!), (*), mapM)
+import Prelude hiding (lookup, (!!), (*))
 
-import Control.Applicative
-import Control.Monad hiding (mapM)
-import Control.Monad.Trans.State
-
-import Data.Default
-import Data.Traversable
+import Data.Foldable (traverse_)
+import Control.Monad.State
 import qualified Data.Map as Map
+
+import Control.Lens
 
 import Foreign.C.Types
 
@@ -29,41 +29,41 @@ import SNet.Task
 
 (!!) :: SNet -> RecEntry CInt -> SNet
 (!!) net tag output = do
-    openStream output
+    info <- initChildNet net
     task Map.empty
+         (openStream output)
          (\rec -> do
             let i = rec ! tag
-            stream <- gets (Map.lookup i) `onNothing` spawnChild i
+            stream <- zoom (at i) $ ifNothing (spawnChild info)
             writeStream stream rec)
-         (do gets Map.elems >>= mapM_ closeStream
+         (do get >>= traverse_ closeStream
              closeStream output)
-  where spawnChild i = do (stream, _) <- spawnSNet net def output
-                          modify $ Map.insert i stream
-                          return stream
+  where spawnChild info = spawnSNet net info output
 
 parallel :: VariantMap ps SNet -> SNet
 parallel branchList output = do
-    outputs <- mapM ($ output) branchList
+    outputs <- traverse ($ output) branchList
     task_ (\rec -> writeStream (getBestMatch outputs rec) rec)
-          (void $ mapM closeStream outputs)
+          (traverse_ closeStream outputs)
 
 (*) :: SNet -> Pattern p -> SNet
 (*) net pattern output = do
-    openStream output
+    info <- initChildNet net
     task Nothing
+        (openStream output)
         (\rec -> case match pattern rec of
             Just _ -> writeStream output rec
-            Nothing -> do new <- get `onNothing` spawnChild
-                          writeStream new rec)
-        (do get >>= withJust closeStream
+            Nothing -> do stream <- ifNothing (spawnChild info)
+                          writeStream stream rec)
+        (do get >>= maybe (return ()) closeStream
             closeStream output)
-  where childNet = net --> (net * pattern)
-        spawnChild = do (stream, _) <- spawnSNet childNet def output
-                        put (Just stream)
-                        return stream
+  where starNet = net --> (net * pattern)
+        spawnChild info = spawnSNet starNet info output
 
-onNothing :: Monad m => m (Maybe a) -> m a -> m a
-onNothing a b = a >>= maybe b return
-
-withJust :: Monad m => (a -> m ()) -> Maybe a -> m ()
-withJust = maybe (return ())
+ifNothing :: MonadState (Maybe v) m => m v -> m v
+ifNothing new = do
+    val <- get >>= \case
+        Nothing -> new
+        Just v -> return v
+    put (Just val)
+    return val

@@ -6,6 +6,7 @@
 {-# LANGUAGE TypeOperators #-}
 module SNet.Task
   ( Task
+  , taskIO
   , task
   , task_
   , box
@@ -14,7 +15,10 @@ module SNet.Task
 
 import Control.Concurrent (forkIO)
 import Control.Monad.Trans
+import Control.Monad.Trans.Reader (ask, runReaderT, ReaderT)
 import Control.Monad.Trans.State (evalStateT, StateT)
+
+import Control.Lens
 
 import SNet.Record
 import SNet.Pattern
@@ -23,22 +27,48 @@ import SNet.Stream
 import SNet.Interfaces
 import SNet.Network
 
-type Task a = StateT a IO ()
+type Task init state = ReaderT init (StateT state IO) ()
 
-task_ :: MonadIO m => (Record Data -> Task ()) -> Task () -> m Stream
-task_ = task ()
-
-task :: MonadIO m => a -> (Record Data -> Task a) -> Task a -> m Stream
-task state taskFun stop = do
+task' :: MonadIO m
+      => state
+      -> m init
+      -> (Record Data -> Task init state)
+      -> Task init state
+      -> m Stream
+task' state before taskFun after = do
+    before' <- before
     input <- newStream
-    liftIO . forkIO $ evalStateT (loop input) state
+    liftIO . forkIO $ evalStateT (runReaderT (loop input) before') state
     return input
   where loop stream =
           readStream stream $ \case
                rec@Rec {..} -> taskFun rec >> loop stream
                Sync s       -> loop s
                Trigger      -> loop stream
-               Terminate    -> stop
+               Terminate    -> after
+
+taskIO :: MonadIO m
+       => state
+       -> (Record Data -> Task () state)
+       -> Task () state
+       -> m Stream
+taskIO state = task' state (return ())
+
+task :: state
+     -> StateT Info IO init
+     -> (Record Data -> Task init state)
+     -> Task init state
+     -> StateT Info IO Stream
+task state before taskFun after = do
+    run <- use createTasks
+    if run
+       then task' state before taskFun after
+       else return undefined
+
+task_ :: (Record Data -> Task () ())
+      -> Task () ()
+      -> StateT Info IO Stream
+task_ = task () (return ())
 
 type family BoxFun (l :: [*])
 type instance BoxFun '[] = IO ()
@@ -54,10 +84,13 @@ box :: Handle hnd
     -> (hnd -> BoxFun p)
     -> SNet
 box pattern variants boxfun output = do
-    openStream output
-    hnd <- newHandle variants writeOut
-    task_ (apply pattern . boxfun `withHandle` hnd)
-          (destroyHandle hnd >> closeStream output)
+    task ()
+         (do openStream output
+             newHandle variants writeOut)
+         (\rec -> do hnd <- ask
+                     apply pattern . boxfun `withHandle` hnd $ rec)
+         (do ask >>= destroyHandle
+             closeStream output)
     where writeOut :: Record Data -> Record Data -> IO ()
           writeOut old new = writeStream output $ flowInherit pattern old new
 
