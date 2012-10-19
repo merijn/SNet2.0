@@ -38,6 +38,13 @@ smokeTests = Group
       , options = []
       , setOption = \_ _ -> Left "Not supported"
       }
+    , TestInstance
+      { run = testSimple id (idBox --> idBox) input
+      , name = "serial"
+      , tags = []
+      , options = []
+      , setOption = \_ _ -> Left "Not supported"
+      }
     ]
   }
   where input = map read ["Rec {(fromList [(1,5)]) (fromList [])}"]
