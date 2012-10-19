@@ -10,8 +10,7 @@ module SNet.Network
   ) where
 
 import Control.Lens
-import Control.Monad.Trans
-import Control.Monad.Trans.State
+import Control.Monad.State
 import Data.Default
 import SNet.Stream
 
