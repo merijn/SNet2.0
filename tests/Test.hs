@@ -15,16 +15,16 @@ idBox = box pattern (Variant pattern Empty) c_id
 
 baseTest :: [Record Data] -> SNet -> [Record Data] -> IO Progress
 baseTest outRecs net inRecs = do
-    result <- runSNetCustom (dummyIn outRecs) dummyOut net
+    result <- runSNetCustom (dummyIn inRecs) dummyOut net
     return $ if fromList outRecs == fromList result
                 then Finished Pass
                 else Finished (Fail "Results don't match!")
 
 testSimple :: (Record Data -> Record Data)
-           -> [Record Data]
            -> SNet
+           -> [Record Data]
            -> IO Progress
-testSimple f recs = baseTest (map f recs) recs
+testSimple f net recs = baseTest (map f recs) net recs
 
 smokeTests :: Test
 smokeTests = Group
@@ -32,7 +32,7 @@ smokeTests = Group
   , concurrently = True
   , groupTests = map Test
     [ TestInstance
-      { run = testSimple id input idBox
+      { run = testSimple id idBox input
       , name = "id"
       , tags = []
       , options = []
